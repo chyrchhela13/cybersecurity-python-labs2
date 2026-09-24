@@ -5,55 +5,42 @@ import csv
 import json
 from datetime import datetime
 
-# Створюємо власний клас помилки (як вимагає методичка)
 class ValidationError(Exception):
     pass
 
-# Підключаємо модуль з твоїми даними
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from shared.student import VARIANT_NUMBER
 
-# Сіль для 6 варіанту (5 символів, доповнено нулями зліва)
-PERSONAL_SALT = f"{VARIANT_NUMBER:05d}" # Вийде "00006"
-MIN_LENGTH = 9 # З таблиці для 6 варіанту
+PERSONAL_SALT = f"{VARIANT_NUMBER:05d}"
+MIN_LENGTH = 9 
 
-# 1. Функція хешування
 def generate_hash(password: str, salt: str = "00000") -> str:
-    # Перевірка на порожні значення
     if password == "" or password is None or salt == "" or salt is None:
         raise ValueError("Пароль або сіль не можуть бути порожніми.")
     
-    # Перевірка на мінімальну довжину для варіанту 6
     if len(password) < MIN_LENGTH:
         raise ValidationError("Пароль занадто короткий для 6 варіанту.")
     
-    # Використовуємо blake2s згідно з таблицею
     data_to_hash = (password + salt).encode('utf-8')
     return hashlib.blake2s(data_to_hash).hexdigest()
 
-# 2. Кортеж користувачів для реєстрації
-# Я спеціально додав користувача "user2" з коротким паролем і "bot" без пароля,
-# щоб показати викладачу, як програма відловлює помилки
 users_to_register = (
     ("admin", "SuperSecretPassword1"),
     ("user1", "MyPassword123"),
-    ("user2", "Short1"), # Викличе ValidationError (< 9 символів)
+    ("user2", "Short1"), 
     ("guest", "GuestPass2026"),
     ("manager", "ManagerSecure99"),
     ("test_user", "TestTesting123"),
     ("student", "StudentPass_6"),
     ("hacker", "HackThePlanet1"),
     ("ceo", "BigBossPassword"),
-    ("bot", "") # Викличе ValueError
 )
 
-# 3. Реєстрація користувачів
 def create_user(username, password):
     hash_value = generate_hash(password, PERSONAL_SALT)
     return (username, hash_value)
 
 def create_users(users_list):
-    # Автоматично створюємо папку data
     os.makedirs("labs/lab01/data", exist_ok=True)
     path = "labs/lab01/data/users.csv"
     
@@ -79,7 +66,6 @@ def create_users(users_list):
     except IOError:
         print("Помилка вводу/виводу при роботі з CSV.")
 
-# 4. Читання бази даних
 def read_db():
     users_db = []
     path = "labs/lab01/data/users.csv"
@@ -87,10 +73,9 @@ def read_db():
     try:
         with open(path, mode="r", encoding="utf-8") as file:
             reader = csv.reader(file)
-            next(reader) # Пропускаємо перший рядок (заголовки)
+            next(reader) 
             
             for row in reader:
-                # Зберігаємо як словник для зручності
                 user_dict = {"username": row[0], "password_hash": row[1]}
                 users_db.append(user_dict)
                 
@@ -107,13 +92,10 @@ def read_db():
         
     return users_db
 
-# 6. Декоратор логування
 def log_event(func):
     def wrapper(*args, **kwargs):
-        # Виконуємо саму функцію (login)
         result = func(*args, **kwargs)
         
-        # Дістаємо логін із першого аргументу
         if len(args) > 0:
             username = args[0]
         else:
@@ -143,7 +125,6 @@ def log_event(func):
         return result
     return wrapper
 
-# 5. Автентифікація
 @log_event
 def login(username: str, password: str) -> bool:
     if username == "" or password == "":
@@ -151,9 +132,8 @@ def login(username: str, password: str) -> bool:
         
     try:
         expected_hash = generate_hash(password, PERSONAL_SALT)
-        users_db = read_db() # Читаємо базу
+        users_db = read_db() 
         
-        # Шукаємо користувача і порівнюємо хеш
         for user in users_db:
             if user["username"] == username:
                 if user["password_hash"] == expected_hash:
@@ -163,22 +143,18 @@ def login(username: str, password: str) -> bool:
     except (ValueError, ValidationError):
         return False
 
-# 7. Головна функція для запуску
 def task3():
     print("--- Реєстрація користувачів (генерація CSV) ---")
     create_users(users_to_register)
     
     print("\n--- Тестування входу (генерація JSON логів) ---")
     try:
-        # Тест 1: Правильний пароль
         res1 = login("admin", "SuperSecretPassword1")
         print(f"Вхід admin (правильний пароль): {res1}")
         
-        # Тест 2: Неправильний пароль
         res2 = login("user1", "WrongPassword")
         print(f"Вхід user1 (неправильний пароль): {res2}")
         
-        # Тест 3: Виклик помилки ValueError (порожній пароль)
         login("guest", "")
     except ValueError as e:
         print(f"Відловлено помилку при вході: {e}")
