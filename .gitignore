@@ -221,3 +221,8 @@ __marimo__/
 labs/lab01/data/
 *.csv
 *.json
+
+.venv/
+__pycache__/
+.ruff_cache/
+!labs/lab02/password_stats.json
