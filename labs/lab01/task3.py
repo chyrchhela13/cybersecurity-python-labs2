@@ -143,7 +143,7 @@ def login(username: str, password: str) -> bool:
     except (ValueError, ValidationError):
         return False
 
-def task3():
+def secure_hashing_and_logging():
     print("--- Реєстрація користувачів (генерація CSV) ---")
     create_users(users_to_register)
     
@@ -160,4 +160,4 @@ def task3():
         print(f"Відловлено помилку при вході: {e}")
 
 if __name__ == "__main__":
-    task3()
+    secure_hashing_and_logging()

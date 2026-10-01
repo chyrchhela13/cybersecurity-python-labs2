@@ -217,7 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Ігнорування баз даних та логів
+# база даних та логи 
 labs/lab01/data/
 *.csv
 *.json
